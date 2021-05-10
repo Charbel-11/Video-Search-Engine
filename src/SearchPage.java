@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.swing.JProgressBar;
@@ -98,18 +99,13 @@ public class SearchPage extends JFrame {
 		btnSearch.setFont(new Font("Tahoma", Font.PLAIN, 15));
 		contentPane.add(btnSearch);
 		
-		for(int i = 0; i < 5; i++) {
-			addResult(resultsPanel, "testLink", "sssss", "C:\\Users\\PC\\Desktop\\test\\22.mp4", 100);
-		}			
-		
 		JScrollPane scrollPane = new JScrollPane(resultsPanel);
 		scrollPane.setBounds(25, 169, 685, 373);
 		contentPane.add(scrollPane);
 	}
 	
-	private void addResult(JPanel parentPanel, String title, String body, String path, int startT) {
+	private void addResult(JPanel parentPanel, String title, String body, String path, int startT, boolean isVid) {
 		JPanel resultBorder = new JPanel();
-//		resultBorder.setBorder(new LineBorder(new Color(0, 0, 0)));
 		resultBorder.setLayout(new GridLayout(4, 1));
 
 		String leftMargin = "          ";
@@ -118,24 +114,26 @@ public class SearchPage extends JFrame {
 		pathLbl.setForeground(Color.GRAY);
 		pathLbl.setFont(new Font("Tahoma", Font.ITALIC, 10));
 		resultBorder.add(pathLbl);
-		
+				
 		JLabel resultTitle = new JLabel(leftMargin + title);
-		resultTitle.setForeground(Color.BLUE.darker());
-		resultTitle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		resultTitle.setFont(new Font("Tahoma", Font.PLAIN, 15));
 		resultTitle.setBounds(10, 11, 474, 32);
-		resultTitle.addMouseListener(new MouseAdapter() {			 
-		    @Override
-		    public void mouseClicked(MouseEvent e) {
-		        //open the corresponding doc
-		    	try {
-					Preprocessor.openVideo(path, startT);
-					//check if video, if not open as usual?
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-		    }
-		});
+		if (startT != -2) {
+			resultTitle.setForeground(Color.BLUE.darker());
+			resultTitle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			resultTitle.addMouseListener(new MouseAdapter() {			 			
+			    @Override
+			    public void mouseClicked(MouseEvent e) {
+			        //open the corresponding doc
+			    	try {
+						if (isVid) { Preprocessor.openVideo(path, startT); }
+						else { Preprocessor.openDoc(path); }
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+			    }
+			});
+		}
 		resultBorder.add(resultTitle);
 		
 		String body2 = "";
@@ -193,8 +191,32 @@ public class SearchPage extends JFrame {
 		parentPanel.repaint();
 		
 		if (query.length() == 0) { return; }
-		List<queryRes> docs = indexProvider.ProcessQuery(query, 10);
-		for (queryRes qR : docs) {
+		List<queryRes> docs = indexProvider.ProcessQuery(query, 50);
+		if (docs.size() == 0) {
+			addResult(parentPanel, "No results available", "", "", -2, false);
+			return;
+		}
+		
+		List<queryRes> uniqueDocs = new ArrayList<queryRes>();
+		HashSet<String> seenDocs = new HashSet<String>();
+		
+		int i = 0;
+		while(i < docs.size() && uniqueDocs.size() < 10) {
+			String curPath = docs.get(i).doc.get("title");
+			if (curPath.length() > 44 && curPath.substring(0, 44).equals(Preprocessor.cachePath)) {
+				int idx = 45;
+				while(idx < curPath.length() && Character.isDigit(curPath.charAt(idx))) { idx++; }
+				idx++;
+				curPath = curPath.substring(0, idx);
+			}
+			
+			if (seenDocs.contains(curPath)) { i++; continue; }
+			seenDocs.add(curPath);
+			uniqueDocs.add(docs.get(i));
+			i++;
+		}
+		
+		for (queryRes qR : uniqueDocs) {
 			String curPath = qR.doc.get("title");
 			String body = qR.doc.get("body");
 //			System.out.println(curPath + " " + body);
@@ -222,12 +244,15 @@ public class SearchPage extends JFrame {
 				while(docTitle.charAt(ptIdx) != '.') { ptIdx--; }
 				docTitle = docTitle.substring(0, ptIdx);
 
-//				System.out.println("Got " + Integer.toString(vidIdx) + " " + Integer.toString(partitionIdx));
-				addResult(parentPanel, docTitle, body, realPath, 20 * partitionIdx);
+				addResult(parentPanel, docTitle, body, realPath, 20 * partitionIdx, true);
 			}
 			
 			else {
-				addResult(parentPanel, "testLink", body, curPath, 0);
+				String docTitle = Paths.get(curPath).getFileName().toString();
+				int ptIdx = docTitle.length() - 1;
+				while(docTitle.charAt(ptIdx) != '.') { ptIdx--; }
+				docTitle = docTitle.substring(0, ptIdx);
+				addResult(parentPanel, docTitle, body, curPath, 0, false);
 			}
 		}
 	}

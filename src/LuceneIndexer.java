@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -48,14 +49,20 @@ public class LuceneIndexer {
 		IndexWriterConfig indexWriterConfig =  this.getConfig(); 
 		IndexWriter writer = new IndexWriter(memoryIndex, indexWriterConfig);
 		
-		File[] listOfFiles = new File(inputBasePath).listFiles();
+		List<File> listOfFiles = new ArrayList<File>(Arrays.asList(new File(inputBasePath).listFiles()));
 		List<String> fileNames = new ArrayList<String>();
 		
-		for(File file: listOfFiles) {
-			if (!file.isFile()) { continue; }
+		for(int i = 0; i < listOfFiles.size(); i++) {
+			File file = listOfFiles.get(i);
+			if (file.isDirectory()) { 
+				File[] subFiles = new File(file.getAbsolutePath()).listFiles();
+				listOfFiles.addAll(Arrays.asList(subFiles));
+				continue; 
+			}
+
 			String fileName = file.getName();
-			String fullPath = inputBasePath + "\\" + file.getName();
-			
+			String fullPath = file.getAbsolutePath();
+						
 			if (fileName.length() > 4 && fileName.substring(fileName.length() - 4).equals(".mp4")) {
 				int idx = videoDirIndex.get(fullPath);
 				String curPath = Preprocessor.cachePath + "\\" + Integer.toString(idx);

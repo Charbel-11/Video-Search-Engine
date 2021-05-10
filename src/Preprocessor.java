@@ -1,4 +1,6 @@
+import java.awt.Desktop;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -20,6 +22,12 @@ public class Preprocessor {
 		Process p = r.exec(cmd);
 	}
 	
+	public static void openDoc(String path) throws IOException {
+		File file = new File(path);
+		Desktop desktop = Desktop.getDesktop();
+		desktop.open(file);
+	}
+
 	public static void preprocessDirectory(String dir, Main frame) throws Exception  {
 		System.out.println("Started Conversion...");
 		
