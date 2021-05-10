@@ -1,4 +1,3 @@
-import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -7,11 +6,11 @@ import javax.swing.JLabel;
 import java.awt.Font;
 import javax.swing.SwingConstants;
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 
 import java.awt.Color;
 import java.awt.Cursor;
-import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
@@ -24,30 +23,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
-import javax.swing.JTextArea;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.Scrollable;
-import javax.swing.JInternalFrame;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import javax.swing.JScrollBar;
-import javax.swing.border.LineBorder;
-import javax.swing.border.MatteBorder;
-import javax.swing.border.SoftBevelBorder;
-import javax.swing.border.BevelBorder;
-import java.awt.Panel;
-import java.awt.FlowLayout;
+import javax.swing.JScrollPane;
 import java.awt.GridLayout;
-import java.awt.CardLayout;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.GroupLayout.ParallelGroup;
-import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.JComboBox;
+import javax.swing.DefaultComboBoxModel;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
 
 public class SearchPage extends JFrame {
 	private JPanel contentPane;
@@ -55,7 +38,10 @@ public class SearchPage extends JFrame {
 	private LuceneIndexer indexProvider;
 	private HashMap<String, Integer> videoDirIndex;
 	private ArrayList<String> idxToVideoDir;
-
+	private JComboBox resRange;
+	private JPanel resultsPanel;
+	private List<SearchResult> searchResults;
+	
 	public SearchPage(String pathDir) throws Exception  {
 		initializeLucene(pathDir);
 		
@@ -79,7 +65,7 @@ public class SearchPage extends JFrame {
 		contentPane.add(searchQuery);
 		searchQuery.setColumns(10);
 			
-		JPanel resultsPanel = new JPanel();
+		resultsPanel = new JPanel();
 		resultsPanel.setBorder(null);
 		resultsPanel.setLayout(new BoxLayout(resultsPanel, BoxLayout.Y_AXIS));
 		
@@ -89,7 +75,7 @@ public class SearchPage extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e)  {
 				try {
-					handleQuery(resultsPanel, searchQuery.getText());
+					handleQuery(searchQuery.getText());
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
@@ -102,23 +88,42 @@ public class SearchPage extends JFrame {
 		JScrollPane scrollPane = new JScrollPane(resultsPanel);
 		scrollPane.setBounds(25, 169, 685, 373);
 		contentPane.add(scrollPane);
+		
+		resRange = new JComboBox();
+		resRange.setBounds(312, 555, 112, 22);
+		resRange.setVisible(false);
+		resRange.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                Object selected = resRange.getSelectedItem();
+                String rangeStr = selected.toString();
+                int startRange = 0;
+                int j = 0;
+                while(rangeStr.charAt(j) != '-') {
+                	startRange*=10; startRange += rangeStr.charAt(j) - '0';
+                	j++;
+                }
+                displayResults(startRange);
+            }
+        });
+		contentPane.add(resRange);
+
 	}
 	
-	private void addResult(JPanel parentPanel, String title, String body, String path, int startT, boolean isVid) {
+	private void addResultToPanel(SearchResult res) {
 		JPanel resultBorder = new JPanel();
 		resultBorder.setLayout(new GridLayout(4, 1));
 
 		String leftMargin = "          ";
 		
-		JLabel pathLbl = new JLabel(leftMargin + path);
+		JLabel pathLbl = new JLabel(leftMargin + res.path);
 		pathLbl.setForeground(Color.GRAY);
 		pathLbl.setFont(new Font("Tahoma", Font.ITALIC, 10));
 		resultBorder.add(pathLbl);
 				
-		JLabel resultTitle = new JLabel(leftMargin + title);
+		JLabel resultTitle = new JLabel(leftMargin + res.title);
 		resultTitle.setFont(new Font("Tahoma", Font.PLAIN, 15));
 		resultTitle.setBounds(10, 11, 474, 32);
-		if (startT != -2) {
+		if (res.startT != -2) {
 			resultTitle.setForeground(Color.BLUE.darker());
 			resultTitle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 			resultTitle.addMouseListener(new MouseAdapter() {			 			
@@ -126,8 +131,8 @@ public class SearchPage extends JFrame {
 			    public void mouseClicked(MouseEvent e) {
 			        //open the corresponding doc
 			    	try {
-						if (isVid) { Preprocessor.openVideo(path, startT); }
-						else { Preprocessor.openDoc(path); }
+						if (res.isVid) { Preprocessor.openVideo(res.path, res.startT); }
+						else { Preprocessor.openDoc(res.path); }
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
@@ -135,36 +140,26 @@ public class SearchPage extends JFrame {
 			});
 		}
 		resultBorder.add(resultTitle);
-		
-		String body2 = "";
-		if (body.length() > 130) {
-			body2 = body.substring(130, body.length());
-			body = body.substring(0, 130);
-			if (body.charAt(129) != ' ' && body2.charAt(0) != ' ') { body += "-"; }
-			if (body2.charAt(0) == ' ') { body2 = body2.substring(1); }
-		}
-		if (body2.length() > 130) {
-			body2 = body2.substring(0, 130) + " ...";
-		}
-		
-		JLabel bodyLbl = new JLabel(leftMargin + body);
+				
+		JLabel bodyLbl = new JLabel(leftMargin + res.body);
 		bodyLbl.setForeground(Color.BLACK);
 		bodyLbl.setFont(new Font("Tahoma", 0, 10));
 		resultBorder.add(bodyLbl);
 		
-		JLabel body2Lbl = new JLabel(leftMargin + body2);
+		JLabel body2Lbl = new JLabel(leftMargin + res.body2);
 		body2Lbl.setForeground(Color.BLACK);
 		body2Lbl.setFont(new Font("Tahoma", 0, 10));
 		resultBorder.add(body2Lbl);
 		
-		parentPanel.add(resultBorder);
-		parentPanel.add(Box.createVerticalStrut(15));
+		resultsPanel.add(resultBorder);
+		resultsPanel.add(Box.createVerticalStrut(15));
 	}
 	
 	//Try VSM, BM25, LM, report the best!
 	private void initializeLucene(String pathDir) throws Exception {
 		videoDirIndex = new HashMap<String, Integer>();
 		idxToVideoDir = new ArrayList<String>();
+		searchResults = new ArrayList<SearchResult>();
 		
 		File seen = new File(Preprocessor.cachePath + "\\seen.txt");  
 		FileReader fr = new FileReader(seen); 
@@ -185,23 +180,21 @@ public class SearchPage extends JFrame {
 		System.out.println("Lucene Initialized");
 	}
 	
-	private void handleQuery(JPanel parentPanel, String query) throws Exception {
-		parentPanel.removeAll();
-		parentPanel.revalidate();
-		parentPanel.repaint();
-		
+	private void handleQuery(String query) throws Exception {
+		searchResults.clear();
+
 		if (query.length() == 0) { return; }
-		List<queryRes> docs = indexProvider.ProcessQuery(query, 50);
+		List<queryRes> docs = indexProvider.ProcessQuery(query, 100);
 		if (docs.size() == 0) {
-			addResult(parentPanel, "No results available", "", "", -2, false);
+			searchResults.add(new SearchResult("No results available", "", "", -2, false));
+			resRange.setVisible(false);
 			return;
 		}
 		
 		List<queryRes> uniqueDocs = new ArrayList<queryRes>();
 		HashSet<String> seenDocs = new HashSet<String>();
 		
-		int i = 0;
-		while(i < docs.size() && uniqueDocs.size() < 10) {
+		for(int i = 0; i < docs.size(); i++) {
 			String curPath = docs.get(i).doc.get("title");
 			if (curPath.length() > 44 && curPath.substring(0, 44).equals(Preprocessor.cachePath)) {
 				int idx = 45;
@@ -213,7 +206,18 @@ public class SearchPage extends JFrame {
 			if (seenDocs.contains(curPath)) { i++; continue; }
 			seenDocs.add(curPath);
 			uniqueDocs.add(docs.get(i));
-			i++;
+		}
+		
+		int n = uniqueDocs.size();
+		int pages = (n+9)/10;
+		if (pages == 1) { resRange.setVisible(false); }
+		else {
+			resRange.setVisible(true);
+			List<String> ranges = new ArrayList<String>();
+			for(int j = 0; j < pages; j++) {
+				ranges.add(Integer.toString(j*10 + 1) + "-" + Integer.toString((j+1)*10));
+			}		
+			resRange.setModel(new DefaultComboBoxModel(ranges.toArray()));
 		}
 		
 		for (queryRes qR : uniqueDocs) {
@@ -244,7 +248,7 @@ public class SearchPage extends JFrame {
 				while(docTitle.charAt(ptIdx) != '.') { ptIdx--; }
 				docTitle = docTitle.substring(0, ptIdx);
 
-				addResult(parentPanel, docTitle, body, realPath, 20 * partitionIdx, true);
+				searchResults.add(new SearchResult(docTitle, body, realPath, 20 * partitionIdx, true));
 			}
 			
 			else {
@@ -252,8 +256,22 @@ public class SearchPage extends JFrame {
 				int ptIdx = docTitle.length() - 1;
 				while(docTitle.charAt(ptIdx) != '.') { ptIdx--; }
 				docTitle = docTitle.substring(0, ptIdx);
-				addResult(parentPanel, docTitle, body, curPath, 0, false);
+				searchResults.add(new SearchResult(docTitle, body, curPath, 0, false));
 			}
+		}
+		
+		displayResults(0);
+	}
+	
+	//Displays results startRange->startRange+9
+	private void displayResults(int startRange) {
+		resultsPanel.removeAll();
+		resultsPanel.revalidate();
+		resultsPanel.repaint();
+		
+		int endRange = Math.min(startRange + 9, searchResults.size() - 1);
+		for(int i = startRange; i <= endRange; i++) {
+			addResultToPanel(searchResults.get(i));
 		}
 	}
 }

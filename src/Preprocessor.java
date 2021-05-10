@@ -4,9 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import javax.swing.JLabel;
-import javax.swing.JProgressBar;
-
 public class Preprocessor {
 	public static String cachePath = "C:\\Users\\PC\\Documents\\VideoSearchEngineCache";
 	static String pathPython = "C:\\Users\\PC\\Documents\\pySTT2\\AudioTranscribe.py";
@@ -19,7 +16,7 @@ public class Preprocessor {
 				"--start-time=" + startTime};
 		
 		Runtime r = Runtime.getRuntime();
-		Process p = r.exec(cmd);
+		r.exec(cmd);
 	}
 	
 	public static void openDoc(String path) throws IOException {
