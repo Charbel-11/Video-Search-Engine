@@ -12,13 +12,12 @@ import time
 
 cachePath = "C:\\Users\\PC\\Documents\\VideoSearchEngineCache"
 
-def transcribeFile(fpath, idx):
+def transcribeFile(fpath, fname, idx):
     f = sf.SoundFile(fpath)
     duration = len(f) / f.samplerate
  
     r = sr.Recognizer()                 # initialize recognizer
     audioFile = sr.AudioFile(fpath)
-#    shortname = ntpath.basename(fpath)
 
     for i in range(mth.ceil(duration/20)):
         with audioFile as source:     # mention source it will be either Microphone or audio files.
@@ -27,20 +26,22 @@ def transcribeFile(fpath, idx):
                 text = r.recognize_google(audio, show_all=False)    # use recognizer to convert our audio into text part.
                 
                 outfile = open(cachePath + "\\" + str(idx) + "\\" + str(i) + ".txt", "w+", encoding="utf8")
-
-                outfile.write(str(text))
+                if i == 0:
+                    outfile.write(fname + " " + str(text))
+                else:
+                    outfile.write(str(text))
                 outfile.close()
                 
             except Exception as e:
                 print(e)    # In case of voice not recognize
 
 #Takes a path to a video file and produces an audio from it
-#audio is always named audio2, need to fix that
 def vidToWav(path, name):
     command = "C:/Users/PC/Downloads/ffmpeg-4.3.2-2021-02-20-full_build/bin/ffmpeg.exe -i \"" + \
               path + "\" -ab 160k -ac 2 -ar 16000 -vn \"" + name + ".wav\""
     subprocess.call(command, shell=True)
 
+#Returns a dictionary {name: idx}
 def getAllDirName():
     seen = {}
     f = open(cachePath + "\\seen.txt", 'r')
@@ -92,8 +93,10 @@ def executeCommand():
         if os.path.exists(curAudioPath):
             os.remove(curAudioPath)
         vidToWav(filepath, filename)
-        transcribeFile(curAudioPath, curIdx)
+        transcribeFile(curAudioPath, filename, curIdx)
         os.remove(curAudioPath)
+
+
 
     f.close()
 
