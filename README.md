@@ -11,12 +11,12 @@ If the user clicks on a video result, it will open that video at a time around w
 ## Methodology
 ### Preprocessing
 Given a directory:
-* Each video is mapped into multiple text documents, each of which corresponds to a 20s segment of the video
+* Each video is mapped to multiple text documents using the Speech-to-Text library; each document corresponds to 20s of the video
 * A cache is used to avoid running the Speech-to-Text algorithm on the same video each time we open the application
 
 The text documents (some of which correspond to videos) are then added to Lucene
 ### Search
-Lucene takes the query as input and provides us with ranked results. The Vector Space Model is used.\
+Lucene takes a query as input and provides us with ranked results. The Vector Space Model is used.\
 Then, we handle text duplicates (if we get multiple texts corresponding to the same video) and display the results to the user.
 
 ## Tools
