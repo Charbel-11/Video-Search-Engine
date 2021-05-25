@@ -28,6 +28,8 @@ Then, we handle text duplicates (if we get multiple texts corresponding to the s
 * WindowsBuilder, Eclipse
 
 ## Screenshots
-<img src="https://user-images.githubusercontent.com/61922252/119517499-571e5000-bd80-11eb-8909-e8c086be0c68.png" width="450" height="350">    <img src="https://user-images.githubusercontent.com/61922252/119517366-3950eb00-bd80-11eb-9ee9-78295099a3bd.png" width="450" height="375">
+### Choose Directory
+<img src="https://user-images.githubusercontent.com/61922252/119517499-571e5000-bd80-11eb-8909-e8c086be0c68.png" width="450" height="350"/>
 
-          **Choose Directory                           Search**
+### Search
+<img src="https://user-images.githubusercontent.com/61922252/119517366-3950eb00-bd80-11eb-9ee9-78295099a3bd.png" width="500" height="400">
