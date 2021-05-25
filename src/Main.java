@@ -17,6 +17,8 @@ import java.io.File;
 import java.io.IOException;
 import javax.swing.JProgressBar;
 
+//Entry point of the program, opens the main screen
+
 public class Main extends JFrame {
 	private JPanel contentPane;
 	private JTextField pathDir;
@@ -127,7 +129,7 @@ public class Main extends JFrame {
 				new Thread(new Runnable() {
 					public void run() {
 				        	try {
-								Preprocessor.preprocessDirectory(pathDir.getText(), ptr);
+								Helper.preprocessDirectory(pathDir.getText(), ptr);
 							} catch (Exception e) {
 								e.printStackTrace();
 							}

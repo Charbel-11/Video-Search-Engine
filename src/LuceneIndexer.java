@@ -65,7 +65,7 @@ public class LuceneIndexer {
 						
 			if (fileName.length() > 4 && fileName.substring(fileName.length() - 4).equals(".mp4")) {
 				int idx = videoDirIndex.get(fullPath);
-				String curPath = Preprocessor.cachePath + "\\" + Integer.toString(idx);
+				String curPath = Helper.cachePath + "\\" + Integer.toString(idx);
 				File[] curTextFiles = new File(curPath).listFiles();
 				
 				for(File textFile : curTextFiles) {

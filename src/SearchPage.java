@@ -131,8 +131,8 @@ public class SearchPage extends JFrame {
 			    public void mouseClicked(MouseEvent e) {
 			        //open the corresponding doc
 			    	try {
-						if (res.isVid) { Preprocessor.openVideo(res.path, res.startT); }
-						else { Preprocessor.openDoc(res.path); }
+						if (res.isVid) { Helper.openVideo(res.path, res.startT); }
+						else { Helper.openDoc(res.path); }
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
@@ -161,7 +161,7 @@ public class SearchPage extends JFrame {
 		idxToVideoDir = new ArrayList<String>();
 		searchResults = new ArrayList<SearchResult>();
 		
-		File seen = new File(Preprocessor.cachePath + "\\seen.txt");  
+		File seen = new File(Helper.cachePath + "\\seen.txt");  
 		FileReader fr = new FileReader(seen); 
 		BufferedReader br = new BufferedReader(fr);  //creates a buffering character input stream  
 		String line; int idx = 0;
@@ -187,7 +187,7 @@ public class SearchPage extends JFrame {
 		List<queryRes> docs = indexProvider.ProcessQuery(query, 100);
 		if (docs.size() == 0) {
 			searchResults.add(new SearchResult("No results available", "", "", -2, false));
-			resRange.setVisible(false);
+			resRange.setVisible(false); displayResults(0);
 			return;
 		}
 		
@@ -196,7 +196,7 @@ public class SearchPage extends JFrame {
 		
 		for(int i = 0; i < docs.size(); i++) {
 			String curPath = docs.get(i).doc.get("title");
-			if (curPath.length() > 44 && curPath.substring(0, 44).equals(Preprocessor.cachePath)) {
+			if (curPath.length() > 44 && curPath.substring(0, 44).equals(Helper.cachePath)) {
 				int idx = 45;
 				while(idx < curPath.length() && Character.isDigit(curPath.charAt(idx))) { idx++; }
 				idx++;
@@ -225,7 +225,7 @@ public class SearchPage extends JFrame {
 			String body = qR.doc.get("body");
 //			System.out.println(curPath + " " + body);
 			
-			if (curPath.length() > 44 && curPath.substring(0, 44).equals(Preprocessor.cachePath)) {
+			if (curPath.length() > 44 && curPath.substring(0, 44).equals(Helper.cachePath)) {
 				int vidIdx = 0, idx = 45;
 				while(idx < curPath.length() && Character.isDigit(curPath.charAt(idx))) {
 					vidIdx *= 10;

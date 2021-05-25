@@ -3,14 +3,12 @@ import shutil
 import subprocess
 import sys
 
-import speech_recognition as sr     # import the library
+import speech_recognition as sr
 import soundfile as sf
 import math as mth
-from pathlib import Path
-import ntpath
-import time
 
 cachePath = "C:\\Users\\PC\\Documents\\VideoSearchEngineCache"
+ffmpegPath = "C:/Program Files/ffmpeg-4.3.2-2021-02-20-full_build/bin/ffmpeg.exe"
 
 def transcribeFile(fpath, fname, idx):
     f = sf.SoundFile(fpath)
@@ -22,6 +20,7 @@ def transcribeFile(fpath, fname, idx):
     for i in range(mth.ceil(duration/20)):
         with audioFile as source:     # mention source it will be either Microphone or audio files.
             try:
+                #Partition the source into (slightly) overlapping segments of ~20s
                 audio = r.record(source, offset=max(0, i * 20 - 2), duration=22)        # listen to the source
                 text = r.recognize_google(audio, show_all=False)    # use recognizer to convert our audio into text part.
                 
@@ -35,13 +34,13 @@ def transcribeFile(fpath, fname, idx):
             except Exception as e:
                 print(e)    # In case of voice not recognize
 
-#Takes a path to a video file and produces an audio from it
+#Takes a path to a video file and produces an audio from it, requires ffmpeg
 def vidToWav(path, name):
-    command = "C:/Users/PC/Downloads/ffmpeg-4.3.2-2021-02-20-full_build/bin/ffmpeg.exe -i \"" + \
+    command = ffmpegPath + " -i \"" + \
               path + "\" -ab 160k -ac 2 -ar 16000 -vn \"" + name + ".wav\""
     subprocess.call(command, shell=True)
 
-#Returns a dictionary {name: idx}
+#Returns a dictionary {name: idx} of cached files
 def getAllDirName():
     seen = {}
     f = open(cachePath + "\\seen.txt", 'r')
@@ -52,7 +51,6 @@ def getAllDirName():
     f.close()
     return seen
 
-# Check other extensions?
 def executeCommand():
     dir = sys.argv[1]
 
@@ -95,8 +93,6 @@ def executeCommand():
         vidToWav(filepath, filename)
         transcribeFile(curAudioPath, filename, curIdx)
         os.remove(curAudioPath)
-
-
 
     f.close()
 
