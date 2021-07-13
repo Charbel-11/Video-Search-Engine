@@ -49,7 +49,7 @@ Follow these steps:
   *  The python file of the project 
   * The VLC executable  
 * In AudioTranscribe.py, set the paths to: 
-  *  The cache directory as above 
+  *  The cache directory (same as above) 
   *  The FFMPEG executable  
 
 ## Screenshots
