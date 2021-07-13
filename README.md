@@ -19,13 +19,38 @@ The text documents (some of which correspond to videos) are then added to Lucene
 Lucene takes a query as input and provides us with ranked results. The Vector Space Model is used.\
 Then, we handle text duplicates (if we get multiple texts corresponding to the same video) and display the results to the user.
 
-## Tools
+## Tools Used
 ### Python
 * Speech Recognition Library
 * FFmpeg
 ### Java
 * Apache Lucene
 * WindowsBuilder, Eclipse
+
+## Setup
+#### Step 1 : Clone the repository
+In order to clone the frontend repository : 
+1. Create a new folder, anywhere in your PC
+2. Open Command Prompt and change the directory into the folder created
+3. Enter : git clone https://github.com/Charbel-11/Video-Search-Engine.git
+#### Step 2 : Install needed tools
+Download the following tools:
+* Python with the Speech Recognition Library
+* FFMPEG
+* Lucene Java Library
+* Eclipse and the Windows Builder Extension
+* VLC Media Player
+#### Step 3 : Set the required paths
+Follow these steps:
+* Add the Lucene library to your Eclipse solution
+* Set Python in your environment variables
+* In Helper.java, set the paths to:  
+  *  A directory that will be used as cache 
+  *  The python file of the project 
+  * The VLC executable  
+* In AudioTranscribe.py, set the paths to: 
+  *  The cache directory as above 
+  *  The FFMPEG executable  
 
 ## Screenshots
 ### Choose Directory
